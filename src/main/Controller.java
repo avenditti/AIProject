@@ -2,12 +2,13 @@ package main;
 
 public class Controller {
 
-	private final int layers = 1;
-	private final int hiddenNeuronsPerLayer = 3;
-	private final int inputNeurons = 4;
-	private final int outputNeurons = 4;
-	private final double errorCriterion = .0005;
-	private final double learningRate = .1;
+	private static final boolean winnerTakeAll = false;
+	private static final int layers = 1;
+	private static final int hiddenNeuronsPerLayer = 3;
+	private static final int inputNeurons = 4;
+	private static final int outputNeurons = 4;
+	private static final double errorCriterion = .00005;
+	private static final double learningRate = .2;
 	private double trainingSessions = 0;
 	private NeuronLayer inputLayer;
 	private NeuronLayer[] hiddenLayers;
@@ -45,11 +46,11 @@ public class Controller {
 			errorGradient[i] = activationFunction(output[i])*error[i];
 		}
 		for(int i = 0; i < currentLayer.pl.getNeurons().length; i++) {
-			currentLayer.pl.getNeurons()[i].adjustNeuronWeight(errorGradient[i], learningRate);
+			currentLayer.pl.getNeurons()[i].adjustNeuronWeight(errorGradient, learningRate, currentLayer.pl.getNeurons()[i].getPreviousValue());
 		}
 		double[] oldGradient = errorGradient;
-		while(currentLayer.pl.pl != null) {
-			currentLayer = currentLayer.pl;
+		currentLayer = currentLayer.pl;
+		while(currentLayer.pl != null) {
 			int sum;
 			double[] hiddenErrorGradient = new double[currentLayer.getSize()];
 			for (int i = 0; i < hiddenErrorGradient.length; i++) {
@@ -57,14 +58,15 @@ public class Controller {
 				//Error gradient of next neuron times weight sum all outputs of neuron
 				Neuron currentNeuron = currentLayer.getNeurons()[i];
 				for(int j = 0; j < currentNeuron.weights.length; j++) {
-					sum += oldGradient[j] * currentNeuron.weights[j];
+					sum += oldGradient[j] * currentNeuron.oldWeights[j];
 				}
-				hiddenErrorGradient[i] = sum;
+				hiddenErrorGradient[i] = currentLayer.getNeurons()[i].getPreviousValue() *(1 - currentLayer.getNeurons()[i].getPreviousValue()) * sum;
 			}
 			oldGradient = hiddenErrorGradient;
-			for(int i = 0; i < currentLayer.pl.getNeurons().length; i++) {
-				currentLayer.pl.getNeurons()[i].adjustNeuronWeight(errorGradient[i], learningRate);
+			for(int i = 0; i < currentLayer.getNeurons().length; i++) {
+				currentLayer.pl.getNeurons()[i].adjustNeuronWeight(hiddenErrorGradient, learningRate, currentLayer.pl.getNeurons()[i].getPreviousValue());
 			}
+			currentLayer = currentLayer.pl;
 		}
 	}
 
@@ -83,6 +85,23 @@ public class Controller {
 			output = hiddenLayers[0].processData(data);
 			output = outputLayer.processData(data);
 			/*
+			 * If using winner take all then adjust the output
+			 */
+			if(winnerTakeAll) {
+				double max = output[0];
+				int j = 0;
+				for(int i = 1; i < output.length; i++) {
+					if(max < output[i]) {
+						max = output[i];
+						output[j] = 0;
+						j = i;
+					} else {
+						output[i] = 0;
+					}
+				}
+				output[j] = 1;
+			}
+			/*
 			 * Calculate error ^2 of network
 			 */
 			double sum = 0;
@@ -91,8 +110,11 @@ public class Controller {
 				sum += .5 * (Math.pow(error[i], 2));
 			}
 			trainingSessions++;
-			if(trainingSessions % 100000 == 0) {
+			if(trainingSessions % 5000 == 0) {
 				System.out.println(trainingSessions);
+				for(double d : output) {
+					System.out.println(d);
+				}
 			}
 			/*
 			 * Check if the network is smart enough
@@ -100,12 +122,6 @@ public class Controller {
 			if(sum < errorCriterion) {
 				return output;
 			} else {
-				try {
-					Thread.sleep(10);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 				runBackPropogation(error, output, outputLayer);
 			}
 		}
