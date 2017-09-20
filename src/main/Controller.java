@@ -42,7 +42,7 @@ public class Controller {
 	private void runBackPropogation(double[] error, double[] output, NeuronLayer currentLayer) {
 		double[] errorGradient = new double[output.length];
 		for (int i = 0; i < errorGradient.length; i++) {
-			errorGradient[i] = output[i]*(1-output[i])*error[i];
+			errorGradient[i] = activationFunction(output[i])*error[i];
 		}
 		for(int i = 0; i < currentLayer.pl.getNeurons().length; i++) {
 			currentLayer.pl.getNeurons()[i].adjustNeuronWeight(errorGradient[i], learningRate);
@@ -66,6 +66,10 @@ public class Controller {
 				currentLayer.pl.getNeurons()[i].adjustNeuronWeight(errorGradient[i], learningRate);
 			}
 		}
+	}
+
+	public static double activationFunction(double d) {
+		return d * (1 - d);
 	}
 
 	public double[] trainNetwork(double[] data, double[] desiredOutput) {
