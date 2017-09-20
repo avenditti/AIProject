@@ -86,6 +86,8 @@ public class Neuron {
 		double weightChange = learningRate * previousValue;
 		for(int i = 0; i < weights.length; i++) {
 			oldWeights[i] = weights[i];
+			System.out.println(learningRate + " " + previousValue + " " + d[i]);
+			System.out.println(neuronNumber + " " + weightChange * d[i]);
 			weights[i] += weightChange * d[i];
 		}
 	}
@@ -105,6 +107,10 @@ public class Neuron {
 
 	public double getPreviousThreshhold() {
 		return previousThreshhold;
+	}
+
+	public void setThreshhold(double d) {
+		this.threshhold = d;
 	}
 
 }

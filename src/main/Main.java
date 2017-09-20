@@ -3,10 +3,11 @@ package main;
 public class Main {
 	public static void main(String args[]) {
 		Controller c = new Controller();
-		double[] s = c.trainNetwork(TestInformation.inputs[0],TestInformation.desiredOutputs[0]);
-		System.out.println();
-		for(double p : s) {
-			System.out.println(p);
+		System.out.println(c.trainNetwork(TestInformation.inputs,TestInformation.desiredOutputs));
+		boolean[] s = c.testNetwork(TestInformation.inputs2, TestInformation.desiredOutputs2);
+		for(boolean d : s) {
+			System.out.println(d);
 		}
+		System.out.println(s[s.length - 1]);
 	}
 }
