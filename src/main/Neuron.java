@@ -7,7 +7,7 @@ public class Neuron {
 	double[] weights;
 	private int neuronNumber;
 	private double previousValue;
-	private double[] oldWeights;
+	double[] oldWeights;
 	private double previousThreshhold;
 
 	/*
@@ -81,12 +81,12 @@ public class Neuron {
 		}
 		return s + neuronNumber + " " + threshhold + "\n";
 	}
-	//error adjusting wrong weights
-	public void adjustNeuronWeight(double d, double learningRate) {
-		double weightChange = learningRate * d * previousValue;
+
+	public void adjustNeuronWeight(double[] d, double learningRate, double previousValue) {
+		double weightChange = learningRate * previousValue;
 		for(int i = 0; i < weights.length; i++) {
 			oldWeights[i] = weights[i];
-			weights[i] += weightChange;
+			weights[i] += weightChange * d[i];
 		}
 	}
 
