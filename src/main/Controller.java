@@ -58,7 +58,7 @@ public class Controller {
 		 * Process hidden layer neurons
 		 */
 		while(currentLayer.pl != null) {
-			int sum;
+			double sum;
 			double[] hiddenErrorGradient = new double[currentLayer.getSize()];
 			for (int i = 0; i < hiddenErrorGradient.length; i++) {
 				sum = 0;
@@ -82,12 +82,11 @@ public class Controller {
 	}
 
 	public boolean[] testNetwork(double[][] dataSet, double[][] desiredOutputSet) {
-		boolean[] outputBool = new boolean[dataSet.length + 1];
+		boolean[] outputBool = new boolean[dataSet.length];
 		double[] data;
 		double[] desiredOutput;
 		double[] output;
 		double[] error;
-		boolean pass = true;
 		for (int k = 0; k < dataSet.length; k++) {
 			data = dataSet[k];
 			desiredOutput = desiredOutputSet[k];
@@ -96,7 +95,7 @@ public class Controller {
 			output = inputLayer.processData(data);
 			output = hiddenLayers[0].processData(output);
 			output = outputLayer.processData(output);
-			if(true) {
+			if(winnerTakeAll) {
 				double max = output[0];
 				int j = 0;
 				for(int i = 1; i < output.length; i++) {
@@ -116,13 +115,11 @@ public class Controller {
 				sum += .5 * (Math.pow(error[i], 2));
 			}
 			outputBool[k] = sum < errorCriterion;
-			pass = pass && outputBool[k];
 		}
 		return outputBool;
 	}
 
 	public boolean trainNetwork(double[][] dataSet, double[][] desiredOutputSet) {
-		boolean done = false;
 		while(true) {
 			double sum = 0;
 			for(int p = 0; p < dataSet.length; p++) {
@@ -158,16 +155,8 @@ public class Controller {
 					error[i] = desiredOutputSet[p][i] - output[i];
 					sum += .5 * (Math.pow(error[i], 2));
 				}
-				/*
-				 * Check if the network is smart enough
-				 */
 				runBackPropogation(error, output, outputLayer);
-				try {
-					Thread.sleep(10000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+
 			}
 
 			trainingSessions++;

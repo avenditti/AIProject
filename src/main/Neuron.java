@@ -22,7 +22,9 @@ public class Neuron {
 		for(int i = 0; i < weights.length; i++) {
 			//Create a random connection value between -2.4/Fi and 2.4/Fi
 			//where Fi is the total number of input neurons to this neuron
-			weights[i] = (Math.random() * (2.4/prevNeurons.length - -2.4/prevNeurons.length)) + -2.4/prevNeurons.length;
+			double f = (Math.random() * (2.4/prevNeurons.length - -2.4/prevNeurons.length)) + -2.4/prevNeurons.length;
+			weights[i] = f;
+			oldWeights[i] = f;
 		}
 		threshhold = (Math.random() * (2.4/prevNeurons.length - -2.4/prevNeurons.length)) + -2.4/prevNeurons.length;
 	}
@@ -38,7 +40,9 @@ public class Neuron {
 		for(int i = 0; i < weights.length; i++) {
 			//Create a random connection value between -2.4/Fi and 2.4/Fi
 			//where Fi is the total number of input neurons to this neuron
-			weights[i] = (Math.random() * (2.4/totalInputNeurons - -2.4/totalInputNeurons)) + -2.4/totalInputNeurons;
+			double f = (Math.random() * (2.4/totalInputNeurons - -2.4/totalInputNeurons)) + -2.4/totalInputNeurons;
+			weights[i] = f;
+			oldWeights[i] = f;
 		}
 		threshhold = (Math.random() * (2.4/totalInputNeurons - -2.4/totalInputNeurons)) + -2.4/totalInputNeurons;
 	}
@@ -86,8 +90,6 @@ public class Neuron {
 		double weightChange = learningRate * previousValue;
 		for(int i = 0; i < weights.length; i++) {
 			oldWeights[i] = weights[i];
-			System.out.println(learningRate + " " + previousValue + " " + d[i]);
-			System.out.println(neuronNumber + " " + weightChange * d[i]);
 			weights[i] += weightChange * d[i];
 		}
 	}
