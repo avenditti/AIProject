@@ -65,10 +65,9 @@ public class Controller {
 			double[] hiddenErrorGradient = new double[currentLayer.getSize()];
 			for (int i = 0; i < currentLayer.pl.getNeurons().length; i++) {
 				sum = 0;
-				for(int j = 0; j < oldGradient.length; j++) {
-					sum += oldGradient[j] * currentLayer.pl.getNeurons()[i].oldWeights[j];
+				for(int j = 0; j < currentLayer.getNeurons()[i].oldWeights.length; j++) {
+					sum += oldGradient[j] * currentLayer.getNeurons()[i].oldWeights[j];
 				}
-				System.out.println(sum);
 				hiddenErrorGradient[i] =  activationFunctionDerivative(currentLayer.getNeurons()[i].getPreviousValue()) * sum;
 				currentLayer.getNeurons()[i].setThreshhold(currentLayer.getNeurons()[i].getThreshhold() + (learningRate * -1 * hiddenErrorGradient[i]));
 			}
@@ -81,7 +80,7 @@ public class Controller {
 	}
 
 	public static double activationFunctionDerivative(double d) {
-		System.out.println(d + " * " + " ( 1 - " + d + ") = " + (d * (1 -d)));
+
 		return d * (1 - d);
 	}
 
@@ -167,13 +166,13 @@ public class Controller {
 					e.printStackTrace();
 				}
 			}
-
+			sum = sum / dataSet[0].length;
 			trainingSessions++;
-			if(trainingSessions % 10000 == 0) {
+			if(trainingSessions % 100 == 0) {
 				System.out.println(trainingSessions);
-				System.out.println(sum / dataSet[0].length);
+				System.out.println(sum );
 			}
-			if(sum < errorCriterion) {
+			if(sum  < errorCriterion) {
 				return true;
 			}
 

@@ -88,7 +88,6 @@ public class Neuron {
 	}
 
 	public double activationFunction(double x) {
-		System.out.println("SIG" + 1/(1+Math.pow(Math.E,(-1 * x))));
 		return 1/(1+Math.pow(Math.E,(-1 * x)));
 	}
 
@@ -96,16 +95,13 @@ public class Neuron {
 		double output = 0;
 		if(prevNeurons != null) {
 			for(int i = 0; i < prevNeurons.length; i++) {
-				System.out.print(data[i] + " * " +  prevNeurons[i].getWeight((int)neuronNumber) + " + ");
 				output += data[i] * prevNeurons[i].getWeight((int)neuronNumber);
 			}
 		} else {
-			return data[(int)neuronNumber];
+			return previousValue = data[(int)neuronNumber];
 		}
-		System.out.println("- 1 * " + threshhold);
 		output -= threshhold;
-		 previousValue = activationFunction(output);
-		return previousValue;
+		return previousValue = activationFunction(output);
 	}
 
 	public String toString() {
@@ -121,11 +117,7 @@ public class Neuron {
 		for(int i = 0; i < weights.length; i++) {
 			oldWeights[i] = weights[i];
 			weights[i] += weightChange * d[i];
-			System.out.println();
-			System.out.println(learningRate + " * " + previousValue + " * " + d[i]);
-			System.out.println("Neuron " + (neuronNumber + 1) + " " + (i + 1) + " " + weightChange * d[i] );
 		}
-//		System.out.println();
 	}
 
 	public double getPreviousValue() {
@@ -146,7 +138,6 @@ public class Neuron {
 	}
 
 	public void setThreshhold(double d) {
-		System.out.println("Neuron " + (neuronNumber + 1) + " " + d);
 		this.threshhold = d;
 	}
 
