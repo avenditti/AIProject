@@ -43,6 +43,14 @@ public class NeuronLayer {
 		}
 	}
 
+	public NeuronLayer(Neuron[] neurons) {
+		this.nes = neurons;
+	}
+	public NeuronLayer(Neuron[] neurons, NeuronLayer pl) {
+		this.nes = neurons;
+		this.pl = pl;
+	}
+
 	public Neuron[] getNeurons() {
 		return nes;
 	}

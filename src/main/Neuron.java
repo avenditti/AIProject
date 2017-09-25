@@ -5,7 +5,7 @@ public class Neuron {
 	private double threshhold;
 	private Neuron[] prevNeurons;
 	double[] weights;
-	private int neuronNumber;
+	private double neuronNumber;
 	private double previousValue;
 	double[] oldWeights;
 	private double previousThreshhold;
@@ -14,48 +14,73 @@ public class Neuron {
 	 * Next two constructors create random connection values to all the other neurons in the next layer
 	 *
 	 */
-	public Neuron(Neuron[] prevNeurons, int totalNextLayer, int neuronNumber) {
+	public Neuron(Neuron[] prevNeurons, int totalNextLayer, double... neuronNumber) {
 		this.prevNeurons = prevNeurons;
-		this.neuronNumber = neuronNumber;
+		this.neuronNumber = neuronNumber[0];
 		weights = new double[totalNextLayer];
 		oldWeights = new double[totalNextLayer];
-		for(int i = 0; i < weights.length; i++) {
-			//Create a random connection value between -2.4/Fi and 2.4/Fi
-			//where Fi is the total number of input neurons to this neuron
-			double f = (Math.random() * (2.4/prevNeurons.length - -2.4/prevNeurons.length)) + -2.4/prevNeurons.length;
-			weights[i] = f;
-			oldWeights[i] = f;
+		if(neuronNumber.length > 1) {
+			for(int i = 0; i < weights.length; i++) {
+				//Create a weight array with the given constraints
+				double f = neuronNumber[i + 2];
+				weights[i] = f;
+				oldWeights[i] = f;
+			}
+			threshhold = neuronNumber[1];
+		} else {
+			for(int i = 0; i < weights.length; i++) {
+				//Create a random connection value between -2.4/Fi and 2.4/Fi
+				//where Fi is the total number of input neurons to this neuron
+				double f = (Math.random() * (2.4/prevNeurons.length - -2.4/prevNeurons.length)) + -2.4/prevNeurons.length;
+				weights[i] = f;
+				oldWeights[i] = f;
+			}
+			threshhold = (Math.random() * (2.4/prevNeurons.length - -2.4/prevNeurons.length)) + -2.4/prevNeurons.length;
 		}
-		threshhold = (Math.random() * (2.4/prevNeurons.length - -2.4/prevNeurons.length)) + -2.4/prevNeurons.length;
 	}
 
 	/*
 	 * Constructor for input layer neurons
 	 */
 
-	public Neuron(int totalNextLayer, int neuronNumber,int totalInputNeurons) {
+	public Neuron(int totalNextLayer,int totalInputNeurons, double... neuronNumber) {
 		weights = new double[totalNextLayer];
 		oldWeights = new double[totalNextLayer];
-		this.neuronNumber = neuronNumber;
-		for(int i = 0; i < weights.length; i++) {
-			//Create a random connection value between -2.4/Fi and 2.4/Fi
-			//where Fi is the total number of input neurons to this neuron
-			double f = (Math.random() * (2.4/totalInputNeurons - -2.4/totalInputNeurons)) + -2.4/totalInputNeurons;
-			weights[i] = f;
-			oldWeights[i] = f;
+		this.neuronNumber = neuronNumber[0];
+		if(neuronNumber.length > 1) {
+			for(int i = 0; i < weights.length; i++) {
+				//Create a weight array with the given constraints
+				double f = neuronNumber[i + 1];
+				weights[i] = f;
+				oldWeights[i] = f;
+			}
+			threshhold = 0;
+		} else {
+			for(int i = 0; i < weights.length; i++) {
+				//Create a random connection value between -2.4/Fi and 2.4/Fi
+				//where Fi is the total number of input neurons to this neuron
+				double f = (Math.random() * (2.4/totalInputNeurons - -2.4/totalInputNeurons)) + -2.4/totalInputNeurons;
+				weights[i] = f;
+				oldWeights[i] = f;
+			}
+			threshhold = 0;//(Math.random() * (2.4/totalInputNeurons - -2.4/totalInputNeurons)) + -2.4/totalInputNeurons;
 		}
-		threshhold = (Math.random() * (2.4/totalInputNeurons - -2.4/totalInputNeurons)) + -2.4/totalInputNeurons;
+
 	}
 
 	/*
 	 * Constructor for output layer neurons
 	 */
 
-	public Neuron(Neuron[] prevNeurons, int neuronNumber) {
+	public Neuron(Neuron[] prevNeurons, double... neuronNumber) {
 		weights = new double[0];
-		this.neuronNumber = neuronNumber;
+		this.neuronNumber = neuronNumber[0];
 		this.prevNeurons = prevNeurons;
-		threshhold = (Math.random() * (2.4/prevNeurons.length - -2.4/prevNeurons.length)) + -2.4/prevNeurons.length;
+		if(neuronNumber.length > 1) {
+			threshhold = neuronNumber[1];
+		} else {
+			threshhold = (Math.random() * (2.4/prevNeurons.length - -2.4/prevNeurons.length)) + -2.4/prevNeurons.length;
+		}
 	}
 
 	public double getWeight(int i) {
@@ -63,6 +88,7 @@ public class Neuron {
 	}
 
 	public double activationFunction(double x) {
+		System.out.println("SIG" + 1/(1+Math.pow(Math.E,(-1 * x))));
 		return 1/(1+Math.pow(Math.E,(-1 * x)));
 	}
 
@@ -70,12 +96,16 @@ public class Neuron {
 		double output = 0;
 		if(prevNeurons != null) {
 			for(int i = 0; i < prevNeurons.length; i++) {
-				output += data[i] * prevNeurons[i].getWeight(neuronNumber) - threshhold;
+				System.out.print(data[i] + " * " +  prevNeurons[i].getWeight((int)neuronNumber) + " + ");
+				output += data[i] * prevNeurons[i].getWeight((int)neuronNumber);
 			}
 		} else {
-			output = data[neuronNumber] - threshhold;
+			return data[(int)neuronNumber];
 		}
-		return previousValue = activationFunction(output);
+		System.out.println("- 1 * " + threshhold);
+		output -= threshhold;
+		 previousValue = activationFunction(output);
+		return previousValue;
 	}
 
 	public String toString() {
@@ -91,7 +121,11 @@ public class Neuron {
 		for(int i = 0; i < weights.length; i++) {
 			oldWeights[i] = weights[i];
 			weights[i] += weightChange * d[i];
+			System.out.println();
+			System.out.println(learningRate + " * " + previousValue + " * " + d[i]);
+			System.out.println("Neuron " + (neuronNumber + 1) + " " + (i + 1) + " " + weightChange * d[i] );
 		}
+//		System.out.println();
 	}
 
 	public double getPreviousValue() {
@@ -112,6 +146,7 @@ public class Neuron {
 	}
 
 	public void setThreshhold(double d) {
+		System.out.println("Neuron " + (neuronNumber + 1) + " " + d);
 		this.threshhold = d;
 	}
 

@@ -8,7 +8,7 @@ public class Controller {
 	private static final int inputNeurons = 4;
 	private static final int outputNeurons = 4;
 	private static final double errorCriterion = .001;
-	private static final double learningRate = .2;
+	private static final double learningRate = .1;
 	private double trainingSessions = 0;
 	private NeuronLayer inputLayer;
 	private NeuronLayer[] hiddenLayers;
@@ -18,18 +18,21 @@ public class Controller {
 		/*
 		 * Build the network given the above criteria
 		 */
-		inputLayer = new NeuronLayer(inputNeurons, hiddenNeuronsPerLayer);
-		hiddenLayers = new NeuronLayer[layers];
-		if(hiddenLayers.length > 1) {
-			hiddenLayers[0] = new NeuronLayer(hiddenNeuronsPerLayer, inputLayer, hiddenNeuronsPerLayer);
-			for(int i = 1; i < layers - 1; i++) {
-				hiddenLayers[i] = new NeuronLayer(hiddenNeuronsPerLayer, hiddenLayers[i - 1], hiddenNeuronsPerLayer);
-			}
-			hiddenLayers[layers - 1] = new NeuronLayer(hiddenNeuronsPerLayer, hiddenLayers[layers - 2], outputNeurons);
-		} else {
-			hiddenLayers[0] = new NeuronLayer(hiddenNeuronsPerLayer, inputLayer, outputNeurons);
-		}
-		outputLayer = new NeuronLayer(hiddenLayers[hiddenLayers.length - 1], outputNeurons);
+//		inputLayer = new NeuronLayer(inputNeurons, hiddenNeuronsPerLayer);
+//		hiddenLayers = new NeuronLayer[layers];
+//		if(hiddenLayers.length > 1) {
+//			hiddenLayers[0] = new NeuronLayer(hiddenNeuronsPerLayer, inputLayer, hiddenNeuronsPerLayer);
+//			for(int i = 1; i < layers - 1; i++) {
+//				hiddenLayers[i] = new NeuronLayer(hiddenNeuronsPerLayer, hiddenLayers[i - 1], hiddenNeuronsPerLayer);
+//			}
+//			hiddenLayers[layers - 1] = new NeuronLayer(hiddenNeuronsPerLayer, hiddenLayers[layers - 2], outputNeurons);
+//		} else {
+//			hiddenLayers[0] = new NeuronLayer(hiddenNeuronsPerLayer, inputLayer, outputNeurons);
+//		}
+//		outputLayer = new NeuronLayer(hiddenLayers[hiddenLayers.length - 1], outputNeurons);
+		inputLayer = new NeuronLayer(new Neuron[] {new Neuron( 2, 2, 0, .5, .9), new Neuron( 2, 2, 1, .4, 1.0)});
+		hiddenLayers = new NeuronLayer[]{ new NeuronLayer(new Neuron[] {new Neuron(inputLayer.getNeurons(), 1, 0, .8, -1.2), new Neuron(inputLayer.getNeurons(), 1, 1, -.1, 1.1)}, inputLayer)};
+		outputLayer = new NeuronLayer(new Neuron[] {new Neuron(hiddenLayers[0].getNeurons(), 0.0, 0.3)}, hiddenLayers[0]);
 		/*
 		 * Print off network information
 		 */
@@ -60,12 +63,12 @@ public class Controller {
 		while(currentLayer.pl != null) {
 			double sum;
 			double[] hiddenErrorGradient = new double[currentLayer.getSize()];
-			for (int i = 0; i < hiddenErrorGradient.length; i++) {
+			for (int i = 0; i < currentLayer.pl.getNeurons().length; i++) {
 				sum = 0;
-				Neuron currentNeuron = currentLayer.getNeurons()[i];
-				for(int j = 0; j < currentNeuron.weights.length; j++) {
-					sum += oldGradient[j] * currentNeuron.oldWeights[j];
+				for(int j = 0; j < oldGradient.length; j++) {
+					sum += oldGradient[j] * currentLayer.pl.getNeurons()[i].oldWeights[j];
 				}
+				System.out.println(sum);
 				hiddenErrorGradient[i] =  activationFunctionDerivative(currentLayer.getNeurons()[i].getPreviousValue()) * sum;
 				currentLayer.getNeurons()[i].setThreshhold(currentLayer.getNeurons()[i].getThreshhold() + (learningRate * -1 * hiddenErrorGradient[i]));
 			}
@@ -78,6 +81,7 @@ public class Controller {
 	}
 
 	public static double activationFunctionDerivative(double d) {
+		System.out.println(d + " * " + " ( 1 - " + d + ") = " + (d * (1 -d)));
 		return d * (1 - d);
 	}
 
@@ -156,7 +160,12 @@ public class Controller {
 					sum += .5 * (Math.pow(error[i], 2));
 				}
 				runBackPropogation(error, output, outputLayer);
-
+				try {
+					Thread.sleep(10000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 
 			trainingSessions++;
