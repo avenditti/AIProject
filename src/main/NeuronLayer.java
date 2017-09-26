@@ -28,7 +28,7 @@ public class NeuronLayer {
 	public NeuronLayer(int n, int nl) {
 		nes = new Neuron[n];
 		for(int i = 0; i < n; i++) {
-			nes[i] = new Neuron(nl, i, n);
+			nes[i] = new Neuron(nl, n, i);
 		}
 	}
 
@@ -41,14 +41,6 @@ public class NeuronLayer {
 		for(int i = 0; i < n; i++) {
 			nes[i] = new Neuron(pl.getNeurons(), i);
 		}
-	}
-
-	public NeuronLayer(Neuron[] neurons) {
-		this.nes = neurons;
-	}
-	public NeuronLayer(Neuron[] neurons, NeuronLayer pl) {
-		this.nes = neurons;
-		this.pl = pl;
 	}
 
 	public Neuron[] getNeurons() {

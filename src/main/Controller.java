@@ -2,13 +2,13 @@ package main;
 
 public class Controller {
 
-	private static final boolean winnerTakeAll = false;
 	private static final int layers = 1;
-	private static final int hiddenNeuronsPerLayer = 3;
+	private static final int hiddenNeuronsPerLayer = 6;
 	private static final int inputNeurons = 4;
 	private static final int outputNeurons = 4;
 	private static final double errorCriterion = .001;
-	private static final double learningRate = .1;
+	private static final double learningRate = .2;
+	public static final int activationFunction = 1;
 	private double trainingSessions = 0;
 	private NeuronLayer inputLayer;
 	private NeuronLayer[] hiddenLayers;
@@ -18,21 +18,18 @@ public class Controller {
 		/*
 		 * Build the network given the above criteria
 		 */
-//		inputLayer = new NeuronLayer(inputNeurons, hiddenNeuronsPerLayer);
-//		hiddenLayers = new NeuronLayer[layers];
-//		if(hiddenLayers.length > 1) {
-//			hiddenLayers[0] = new NeuronLayer(hiddenNeuronsPerLayer, inputLayer, hiddenNeuronsPerLayer);
-//			for(int i = 1; i < layers - 1; i++) {
-//				hiddenLayers[i] = new NeuronLayer(hiddenNeuronsPerLayer, hiddenLayers[i - 1], hiddenNeuronsPerLayer);
-//			}
-//			hiddenLayers[layers - 1] = new NeuronLayer(hiddenNeuronsPerLayer, hiddenLayers[layers - 2], outputNeurons);
-//		} else {
-//			hiddenLayers[0] = new NeuronLayer(hiddenNeuronsPerLayer, inputLayer, outputNeurons);
-//		}
-//		outputLayer = new NeuronLayer(hiddenLayers[hiddenLayers.length - 1], outputNeurons);
-		inputLayer = new NeuronLayer(new Neuron[] {new Neuron( 2, 2, 0, .5, .9), new Neuron( 2, 2, 1, .4, 1.0)});
-		hiddenLayers = new NeuronLayer[]{ new NeuronLayer(new Neuron[] {new Neuron(inputLayer.getNeurons(), 1, 0, .8, -1.2), new Neuron(inputLayer.getNeurons(), 1, 1, -.1, 1.1)}, inputLayer)};
-		outputLayer = new NeuronLayer(new Neuron[] {new Neuron(hiddenLayers[0].getNeurons(), 0.0, 0.3)}, hiddenLayers[0]);
+		inputLayer = new NeuronLayer(inputNeurons, hiddenNeuronsPerLayer);
+		hiddenLayers = new NeuronLayer[layers];
+		if(hiddenLayers.length > 1) {
+			hiddenLayers[0] = new NeuronLayer(hiddenNeuronsPerLayer, inputLayer, hiddenNeuronsPerLayer);
+			for(int i = 1; i < layers - 1; i++) {
+				hiddenLayers[i] = new NeuronLayer(hiddenNeuronsPerLayer, hiddenLayers[i - 1], hiddenNeuronsPerLayer);
+			}
+			hiddenLayers[layers - 1] = new NeuronLayer(hiddenNeuronsPerLayer, hiddenLayers[layers - 2], outputNeurons);
+		} else {
+			hiddenLayers[0] = new NeuronLayer(hiddenNeuronsPerLayer, inputLayer, outputNeurons);
+		}
+		outputLayer = new NeuronLayer(hiddenLayers[hiddenLayers.length - 1], outputNeurons);
 		/*
 		 * Print off network information
 		 */
@@ -63,7 +60,7 @@ public class Controller {
 		while(currentLayer.pl != null) {
 			double sum;
 			double[] hiddenErrorGradient = new double[currentLayer.getSize()];
-			for (int i = 0; i < currentLayer.pl.getNeurons().length; i++) {
+			for (int i = 0; i < currentLayer.getNeurons().length; i++) {
 				sum = 0;
 				for(int j = 0; j < currentLayer.getNeurons()[i].oldWeights.length; j++) {
 					sum += oldGradient[j] * currentLayer.getNeurons()[i].oldWeights[j];
@@ -79,9 +76,18 @@ public class Controller {
 		}
 	}
 
-	public static double activationFunctionDerivative(double d) {
+	public static double activationFunctionDerivative(double x) {
+		switch(Controller.activationFunction) {
+		case 0:
+			return x * (1 - x);
+		case 1:
+			return (2*Neuron.a*Neuron.b*Math.pow(Math.E,(-Neuron.b*x)))/Math.pow((Math.pow(Math.E,(-Neuron.b*x)+1)),2);
+		case 2:
+			return -2*x*Math.pow(Math.E, -Math.pow(x, 2));
+		default:
+			return x * (1 - x);
+		}
 
-		return d * (1 - d);
 	}
 
 	public boolean[] testNetwork(double[][] dataSet, double[][] desiredOutputSet) {
@@ -98,20 +104,6 @@ public class Controller {
 			output = inputLayer.processData(data);
 			output = hiddenLayers[0].processData(output);
 			output = outputLayer.processData(output);
-			if(winnerTakeAll) {
-				double max = output[0];
-				int j = 0;
-				for(int i = 1; i < output.length; i++) {
-					if(max < output[i]) {
-						max = output[i];
-						output[j] = 0;
-						j = i;
-					} else {
-						output[i] = 0;
-					}
-				}
-				output[j] = 1;
-			}
 			double sum = 0;
 			for(int i = 0; i < error.length; i++) {
 				error[i] = desiredOutput[i] - output[i];
@@ -123,54 +115,47 @@ public class Controller {
 	}
 
 	public boolean trainNetwork(double[][] dataSet, double[][] desiredOutputSet) {
+		double sum;
+		double[] output;
+		double[] error;
+		boolean l = true;
+		int h;
 		while(true) {
-			double sum = 0;
-			for(int p = 0; p < dataSet.length; p++) {
+			sum = 0;
+			h = (int) (Math.random() * dataSet.length);
+			boolean[] tested = new boolean[dataSet.length];
+			while(true) {
 				/*
 				 * Process data through network
 				 */
-				double[] output = new double[dataSet[p].length];
-				double[] error = new double[desiredOutputSet[p].length];
-				output = inputLayer.processData(dataSet[p]);
+				output = new double[dataSet[h].length];
+				error = new double[desiredOutputSet[h].length];
+				output = inputLayer.processData(dataSet[h]);
 				output = hiddenLayers[0].processData(output);
 				output = outputLayer.processData(output);
-				/*
-				 * If using winner take all then adjust the output
-				 */
-				if(winnerTakeAll) {
-					double max = output[0];
-					int j = 0;
-					for(int i = 1; i < output.length; i++) {
-						if(max < output[i]) {
-							max = output[i];
-							output[j] = 0;
-							j = i;
-						} else {
-							output[i] = 0;
-						}
-					}
-					output[j] = 1;
-				}
 				/*
 				 * Calculate error ^2 of network
 				 */
 				for(int i = 0; i < error.length; i++) {
-					error[i] = desiredOutputSet[p][i] - output[i];
-					sum += .5 * (Math.pow(error[i], 2));
+					error[i] = desiredOutputSet[h][i] - output[i];
+					sum += (Math.pow(error[i], 2));
 				}
 				runBackPropogation(error, output, outputLayer);
-				try {
-					Thread.sleep(10000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				tested[h] = true;
+				l = true;
+				for(boolean b : tested) {
+					l = l && b;
 				}
+				if(l) {
+					break;
+				}
+				while(tested[h = (int) (Math.random() * dataSet.length)]);
 			}
 			sum = sum / dataSet[0].length;
 			trainingSessions++;
 			if(trainingSessions % 100 == 0) {
 				System.out.println(trainingSessions);
-				System.out.println(sum );
+				System.out.println(sum);
 			}
 			if(sum  < errorCriterion) {
 				return true;
