@@ -2,13 +2,13 @@ package main;
 
 public class Main {
 	public static void main(String args[]) {
-		Controller c = new Controller();
-//		c.trainNetwork(new double[][]{{1, 1}, {0, 1}, {1, 0}, {0, 0}}, new double[][]{{0}, {1}, {1}, {0}});
-		System.out.println(c.trainNetwork(TestInformation.inputs,TestInformation.desiredOutputs));
-		boolean[] s = c.testNetwork(TestInformation.inputs2, TestInformation.desiredOutputs2);
-		for(boolean d : s) {
-			System.out.println(d);
+		Controller c = new Controller(Double.parseDouble(args[0]), args[1].equals("ht2") ? 1 : 0);
+		if(c.trainNetwork(TestInformation.inputs,TestInformation.desiredOutputs)) {
+			int i = 0;
+			for(boolean d : c.testNetwork(TestInformation.inputs2, TestInformation.desiredOutputs2)) {
+				i++;
+				System.out.println("System Test " + i + " " + (d ? "Pass" : "Fail"));
+			}
 		}
-		System.out.println(s[s.length - 1]);
 	}
 }

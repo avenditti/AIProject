@@ -1,89 +1,100 @@
 package main;
 
 public class Controller {
-
+	/*
+	 * iL -> inputLayer
+	 * hl -> hiddenLayers
+	 * oL -> oututLayers
+	 * iN -> inputNeurons
+	 * hnpl -> hiddenNeuronsPerLayer
+	 * oN -> outputNeurons
+	 */
 	private static final int layers = 1;
-	private static final int hiddenNeuronsPerLayer = 6;
-	private static final int inputNeurons = 4;
-	private static final int outputNeurons = 4;
-	private static final double errorCriterion = .001;
+	private static final int hnpl = 3;
+	private static final int iN = 4;
+	private static final int oN = 4;
+	private static final double errorCriterion = .01;
 	private static final double learningRate = .2;
-	public static final int activationFunction = 1;
-	private double trainingSessions = 0;
-	private NeuronLayer inputLayer;
-	private NeuronLayer[] hiddenLayers;
-	private NeuronLayer outputLayer;
+	public static double beta = .95;
+	public static int activationFunction = 1;
+	private NeuronLayer iL;
+	private NeuronLayer[] hL;
+	private NeuronLayer oL;
 
-	public Controller() {
+	public Controller(double beta, int function) {
+		Controller.beta = beta;
+		Controller.activationFunction = function;
 		/*
 		 * Build the network given the above criteria
 		 */
-		inputLayer = new NeuronLayer(inputNeurons, hiddenNeuronsPerLayer);
-		hiddenLayers = new NeuronLayer[layers];
-		if(hiddenLayers.length > 1) {
-			hiddenLayers[0] = new NeuronLayer(hiddenNeuronsPerLayer, inputLayer, hiddenNeuronsPerLayer);
+		iL = new NeuronLayer(iN, hnpl);
+		hL = new NeuronLayer[layers];
+		if(hL.length > 1) {
+			hL[0] = new NeuronLayer(hnpl, iL, hnpl);
 			for(int i = 1; i < layers - 1; i++) {
-				hiddenLayers[i] = new NeuronLayer(hiddenNeuronsPerLayer, hiddenLayers[i - 1], hiddenNeuronsPerLayer);
+				hL[i] = new NeuronLayer(hnpl, hL[i - 1], hnpl);
 			}
-			hiddenLayers[layers - 1] = new NeuronLayer(hiddenNeuronsPerLayer, hiddenLayers[layers - 2], outputNeurons);
+			hL[layers - 1] = new NeuronLayer(hnpl, hL[layers - 2], oN);
 		} else {
-			hiddenLayers[0] = new NeuronLayer(hiddenNeuronsPerLayer, inputLayer, outputNeurons);
+			hL[0] = new NeuronLayer(hnpl, iL, oN);
 		}
-		outputLayer = new NeuronLayer(hiddenLayers[hiddenLayers.length - 1], outputNeurons);
-		/*
-		 * Print off network information
-		 */
-		System.out.println("Input Layer\n" + inputLayer.toString());
-		for(int i = 0; i < layers; i++) {
-			System.out.println("Hidden Layer " + i + "\n" + hiddenLayers[i].toString());
-		}
-		System.out.println("Output Layer\n" + outputLayer.toString());
+		oL = new NeuronLayer(hL[hL.length - 1], oN);
+//		/*
+//		 * Print off network information
+//		 */
+//		System.out.println("Input Layer\n" + iL.toString());
+//		for(int i = 0; i < layers; i++) {
+//			System.out.println("Hidden Layer " + i + "\n" + hL[i].toString());
+//		}
+//		System.out.println("Output Layer\n" + oL.toString());
 	}
 
-	private void runBackPropogation(double[] error, double[] output, NeuronLayer currentLayer) {
+	private void runBackPropogation(double[] error, double[] output, NeuronLayer cL) {
 		/*
 		 * Process output neurons
 		 */
-		double[] errorGradient = new double[output.length];
-		for (int i = 0; i < errorGradient.length; i++) {
-			errorGradient[i] = activationFunctionDerivative(output[i])*error[i];
-			currentLayer.getNeurons()[i].setThreshhold(currentLayer.getNeurons()[i].getThreshhold() + (learningRate * -1 * errorGradient[i]));
+		double[] eg = new double[output.length];
+		for (int i = 0; i < eg.length; i++) {
+			eg[i] = afd(output[i])*error[i];
+			cL.getNeurons()[i].setThreshhold(cL.getNeurons()[i].getThreshhold() + (learningRate * -1 * eg[i]));
 		}
-		for(int i = 0; i < currentLayer.pl.getNeurons().length; i++) {
-			currentLayer.pl.getNeurons()[i].adjustNeuronWeight(errorGradient, learningRate, currentLayer.pl.getNeurons()[i].getPreviousValue());
+		for(int i = 0; i < cL.pl.getNeurons().length; i++) {
+			cL.pl.getNeurons()[i].adjustNeuronWeight(eg, learningRate, cL.pl.getNeurons()[i].getPreviousValue());
 		}
-		double[] oldGradient = errorGradient;
-		currentLayer = currentLayer.pl;
+		cL = cL.pl;
 		/*
 		 * Process hidden layer neurons
 		 */
-		while(currentLayer.pl != null) {
+		while(cL.pl != null) {
 			double sum;
-			double[] hiddenErrorGradient = new double[currentLayer.getSize()];
-			for (int i = 0; i < currentLayer.getNeurons().length; i++) {
+			double[] hneg = new double[cL.getSize()];
+			for (int i = 0; i < cL.getNeurons().length; i++) {
 				sum = 0;
-				for(int j = 0; j < currentLayer.getNeurons()[i].oldWeights.length; j++) {
-					sum += oldGradient[j] * currentLayer.getNeurons()[i].oldWeights[j];
+				for(int j = 0; j < cL.getNeurons()[i].oldWeights.length; j++) {
+					sum += eg[j] * cL.getNeurons()[i].oldWeights[j];
 				}
-				hiddenErrorGradient[i] =  activationFunctionDerivative(currentLayer.getNeurons()[i].getPreviousValue()) * sum;
-				currentLayer.getNeurons()[i].setThreshhold(currentLayer.getNeurons()[i].getThreshhold() + (learningRate * -1 * hiddenErrorGradient[i]));
+				hneg[i] =  afd(cL.getNeurons()[i].getPreviousValue()) * sum;
+				cL.getNeurons()[i].setThreshhold(cL.getNeurons()[i].getThreshhold() + (learningRate * -1 * hneg[i]));
 			}
-			oldGradient = hiddenErrorGradient;
-			for(int i = 0; i < currentLayer.pl.getNeurons().length; i++) {
-				currentLayer.pl.getNeurons()[i].adjustNeuronWeight(hiddenErrorGradient, learningRate, currentLayer.pl.getNeurons()[i].getPreviousValue());
+			eg = hneg;
+			for(int i = 0; i < cL.pl.getNeurons().length; i++) {
+				cL.pl.getNeurons()[i].adjustNeuronWeight(hneg, learningRate, cL.pl.getNeurons()[i].getPreviousValue());
 			}
-			currentLayer = currentLayer.pl;
+			cL = cL.pl;
 		}
 	}
 
-	public static double activationFunctionDerivative(double x) {
+	/*
+	 * Activation Function Derivative
+	 */
+	public static double afd(double x) {
 		switch(Controller.activationFunction) {
 		case 0:
 			return x * (1 - x);
 		case 1:
-			return (2*Neuron.a*Neuron.b*Math.pow(Math.E,(-Neuron.b*x)))/Math.pow((Math.pow(Math.E,(-Neuron.b*x)+1)),2);
+			return 1 - Math.pow(x, 2);
 		case 2:
-			return -2*x*Math.pow(Math.E, -Math.pow(x, 2));
+			return -2 * -Math.sqrt(-Math.log(x)) * x;
 		default:
 			return x * (1 - x);
 		}
@@ -93,23 +104,28 @@ public class Controller {
 	public boolean[] testNetwork(double[][] dataSet, double[][] desiredOutputSet) {
 		boolean[] outputBool = new boolean[dataSet.length];
 		double[] data;
-		double[] desiredOutput;
 		double[] output;
-		double[] error;
 		for (int k = 0; k < dataSet.length; k++) {
 			data = dataSet[k];
-			desiredOutput = desiredOutputSet[k];
 			output = new double[data.length];
-			error = new double[desiredOutput.length];
-			output = inputLayer.processData(data);
-			output = hiddenLayers[0].processData(output);
-			output = outputLayer.processData(output);
-			double sum = 0;
-			for(int i = 0; i < error.length; i++) {
-				error[i] = desiredOutput[i] - output[i];
-				sum += .5 * (Math.pow(error[i], 2));
+			output = iL.processData(data);
+			output = hL[0].processData(output);
+			output = oL.processData(output);
+			int max = 0;
+			for (int i = 1; i < output.length; i++) {
+				if(output[i] > output[max]) {
+					output[max] = 0;
+					max = i;
+				} else {
+					output[i] = 0;
+				}
+			};
+			output[max] = 1;
+			boolean l = true;
+			for (int i = 0; i < output.length; i++) {
+				l = l && output[i] == desiredOutputSet[k][i];
 			}
-			outputBool[k] = sum < errorCriterion;
+			outputBool[k] = l;
 		}
 		return outputBool;
 	}
@@ -120,6 +136,8 @@ public class Controller {
 		double[] error;
 		boolean l = true;
 		int h;
+		double sum2;
+		int trainingSessions = 0;
 		while(true) {
 			sum = 0;
 			h = (int) (Math.random() * dataSet.length);
@@ -130,34 +148,38 @@ public class Controller {
 				 */
 				output = new double[dataSet[h].length];
 				error = new double[desiredOutputSet[h].length];
-				output = inputLayer.processData(dataSet[h]);
-				output = hiddenLayers[0].processData(output);
-				output = outputLayer.processData(output);
+				output = iL.processData(dataSet[h]);
+				output = hL[0].processData(output);
+				output = oL.processData(output);
 				/*
 				 * Calculate error ^2 of network
 				 */
+				sum2 = 0;
 				for(int i = 0; i < error.length; i++) {
 					error[i] = desiredOutputSet[h][i] - output[i];
-					sum += (Math.pow(error[i], 2));
+					sum2 += (Math.pow(error[i], 2));
 				}
-				runBackPropogation(error, output, outputLayer);
+				sum += sum2 / error.length;
+				runBackPropogation(error, output, oL);
 				tested[h] = true;
 				l = true;
-				for(boolean b : tested) {
+				for(boolean b : tested)
 					l = l && b;
-				}
-				if(l) {
+				if(l)
 					break;
-				}
 				while(tested[h = (int) (Math.random() * dataSet.length)]);
 			}
 			sum = sum / dataSet[0].length;
 			trainingSessions++;
 			if(trainingSessions % 100 == 0) {
-				System.out.println(trainingSessions);
-				System.out.println(sum);
+				System.out.printf("%-8d: %.6f \n",trainingSessions, sum);
+			}
+			if(trainingSessions > 10000) {
+				System.out.println("Network will not converge please try training again");
+				return false;
 			}
 			if(sum  < errorCriterion) {
+				System.out.printf("%-8d: %.6f \n",trainingSessions, sum);
 				return true;
 			}
 

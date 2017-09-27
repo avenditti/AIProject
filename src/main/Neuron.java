@@ -10,7 +10,6 @@ public class Neuron {
 	double[] oldWeights;
 	double[] oldDelta;
 	private double previousThreshhold;
-	public static final double beta = .95;
 	public static final double a = 1;
 	public static final double b = 1;
 
@@ -71,11 +70,11 @@ public class Neuron {
 	public double activationFunction(double x) {
 		switch(Controller.activationFunction) {
 		case 0:
-			return 1/(1+Math.pow(Math.E,(-1 * x)));
+			return 1/(1+Math.exp(-1 * x));
 		case 1:
-			return (2*a)/(1+Math.pow(Math.E, -b*x)) - a;
+			return (2*a)/(1+Math.exp(-2 * b * x)) - a;
 		case 2:
-			return Math.pow(Math.E, Math.pow(-x,2));
+			return Math.exp(Math.pow(-x, 2));
 		default:
 			return 1/(1+Math.pow(Math.E,(-1 * x)));
 		}
@@ -107,7 +106,7 @@ public class Neuron {
 		double weightChange = learningRate * previousValue;
 		for(int i = 0; i < weights.length; i++) {
 			oldWeights[i] = weights[i];
-			weights[i] += (beta * oldDelta[i]) + (weightChange * d[i]);
+			weights[i] += (Controller.beta * oldDelta[i]) + (weightChange * d[i]);
 			oldDelta[i] = (weightChange * d[i]);
 		}
 	}
